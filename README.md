@@ -1,1 +1,1 @@
-# classmate
+# classmate-smart attendence app
