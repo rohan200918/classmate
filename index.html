@@ -9,18 +9,21 @@
 
 <style>
 *{box-sizing:border-box}
+
 body{
   margin:0;
   font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
   background:#f5f7fb;
   color:#172033;
 }
+
 header{
   background:#111827;
   color:white;
   padding:20px;
   text-align:center;
 }
+
 header h1{margin:0;font-size:27px}
 header p{margin:5px 0 0;opacity:.75}
 
@@ -70,7 +73,32 @@ button.danger{
   border:1px solid #d8dce5;
 }
 
-.hidden{display:none}
+.small{
+  font-size:13px;
+  color:#667085;
+}
+
+#loginScreen{
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:20px;
+}
+
+.loginBox{
+  background:white;
+  width:100%;
+  max-width:420px;
+  padding:28px;
+  border-radius:22px;
+  text-align:center;
+  box-shadow:0 5px 25px rgba(0,0,0,.08);
+}
+
+#app{
+  display:none;
+}
 
 .subject{
   border:1px solid #e1e5ec;
@@ -79,7 +107,9 @@ button.danger{
   margin-top:13px;
 }
 
-.subject h3{margin:0 0 8px}
+.subject h3{
+  margin:0 0 8px;
+}
 
 .stats{
   display:grid;
@@ -107,7 +137,9 @@ button.danger{
   gap:8px;
 }
 
-.actions button{margin-top:0}
+.actions button{
+  margin-top:0;
+}
 
 .progress{
   height:10px;
@@ -122,31 +154,6 @@ button.danger{
   background:#111827;
 }
 
-.small{
-  font-size:13px;
-  color:#667085;
-}
-
-#loginScreen{
-  min-height:100vh;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  padding:20px;
-}
-
-.loginBox{
-  background:white;
-  width:100%;
-  max-width:420px;
-  padding:28px;
-  border-radius:22px;
-  text-align:center;
-  box-shadow:0 5px 25px rgba(0,0,0,.08);
-}
-
-#app{display:none}
-
 .historyItem{
   padding:10px 0;
   border-bottom:1px solid #eee;
@@ -157,7 +164,9 @@ button.danger{
 .absent{color:#dc2626}
 
 @media(max-width:450px){
-  .stats{grid-template-columns:repeat(2,1fr)}
+  .stats{
+    grid-template-columns:repeat(2,1fr);
+  }
 }
 </style>
 </head>
@@ -166,17 +175,25 @@ button.danger{
 
 <!-- LOGIN -->
 <div id="loginScreen">
+
   <div class="loginBox">
+
     <h1>📚 Classmate</h1>
+
     <p>Smart Student Attendance Tracker</p>
 
     <button class="google" onclick="googleLogin()">
       Continue with Google
     </button>
 
-    <p class="small">Your attendance is saved to your account.</p>
+    <p class="small">
+      Your attendance is saved to your account.
+    </p>
+
   </div>
+
 </div>
+
 
 <!-- APP -->
 <div id="app">
@@ -188,553 +205,1048 @@ button.danger{
 
 <div class="container">
 
+  <!-- PROFILE -->
   <div class="card">
+
     <h2>👤 Student Profile</h2>
 
     <input id="studentName" placeholder="Student Name">
+
     <input id="collegeName" placeholder="College Name">
+
     <input id="rollNumber" placeholder="Roll Number">
 
-    <button onclick="saveProfile()">Save Profile</button>
+    <button onclick="saveProfile()">
+      Save Profile
+    </button>
 
     <p id="userEmail" class="small"></p>
-    <button class="secondary" onclick="logout()">Sign Out</button>
+
+    <button class="secondary" onclick="logout()">
+      Sign Out
+    </button>
+
   </div>
 
+
+  <!-- OVERALL -->
   <div class="card">
+
     <h2>📊 Overall Attendance</h2>
+
     <h1 id="overallPercent">0%</h1>
+
     <div class="progress">
       <div id="overallBar" style="width:0%"></div>
     </div>
+
   </div>
 
+
+  <!-- SUBJECTS -->
   <div class="card">
+
     <h2>📚 Subjects</h2>
 
-    <input id="newSubject" placeholder="Enter subject name">
-    <button onclick="addSubject()">+ Add Subject</button>
+    <input
+      id="newSubject"
+      placeholder="Enter subject name"
+    >
+
+    <button onclick="addSubject()">
+      + Add Subject
+    </button>
 
     <div id="subjects"></div>
+
   </div>
 
+
+  <!-- HISTORY -->
   <div class="card">
+
     <h2>📅 Attendance History</h2>
+
     <div id="history">
-      <p class="small">No attendance recorded yet.</p>
+      <p class="small">
+        No attendance recorded yet.
+      </p>
     </div>
+
   </div>
 
 </div>
+
 </div>
+
 
 <script>
-const SUPABASE_URL = "https://schljnslqdqvqefsjmyy.supabase.co";
-const SUPABASE_KEY = "sb_publishable_zQ7WmRJTIlkLO1wD96x0Bg_SehsatES";
 
-const supabaseClient = supabase.createClient(
-  SUPABASE_URL,
-  SUPABASE_KEY
-);
+/* =========================
+   SUPABASE
+========================= */
+
+const SUPABASE_URL =
+  "https://schljnslqdqvqefsjmyy.supabase.co";
+
+const SUPABASE_KEY =
+  "PASTE_YOUR_PUBLISHABLE_KEY_HERE";
+
+
+const supabaseClient =
+  supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_KEY
+  );
+
 
 let currentUser = null;
 let attendance = [];
 
+
+/* =========================
+   GOOGLE LOGIN
+========================= */
+
 async function googleLogin(){
-  const { error } = await supabaseClient.auth.signInWithOAuth({
-    provider:"google",
-    options:{
-      redirectTo:"https://rohan200918.github.io/classmate/"
-    }
-  });
+
+  const { error } =
+    await supabaseClient.auth.signInWithOAuth({
+
+      provider:"google",
+
+      options:{
+        redirectTo:
+          "https://rohan200918.github.io/classmate/"
+      }
+
+    });
 
   if(error){
     alert(error.message);
   }
+
 }
+
+
+/* =========================
+   LOGOUT
+========================= */
 
 async function logout(){
+
   await supabaseClient.auth.signOut();
-  location.reload();
+
+  currentUser = null;
+  attendance = [];
+
+  document.getElementById(
+    "loginScreen"
+  ).style.display = "flex";
+
+  document.getElementById(
+    "app"
+  ).style.display = "none";
+
 }
 
-async function checkUser(){
-  const { data } = await supabaseClient.auth.getSession();
 
-  if(data.session){
-    currentUser = data.session.user;
+/* =========================
+   SHOW APP
+========================= */
 
-    document.getElementById("loginScreen").style.display="none";
-    document.getElementById("app").style.display="block";
+async function showApp(session){
 
-    document.getElementById("userEmail").textContent =
-      currentUser.email || "";
+  if(!session){
 
-    loadProfile();
-    await loadAttendance();
-  }else{
-    document.getElementById("loginScreen").style.display="flex";
-    document.getElementById("app").style.display="none";
+    currentUser = null;
+
+    document.getElementById(
+      "loginScreen"
+    ).style.display = "flex";
+
+    document.getElementById(
+      "app"
+    ).style.display = "none";
+
+    return;
   }
+
+
+  currentUser = session.user;
+
+
+  document.getElementById(
+    "loginScreen"
+  ).style.display = "none";
+
+  document.getElementById(
+    "app"
+  ).style.display = "block";
+
+
+  document.getElementById(
+    "userEmail"
+  ).textContent =
+    currentUser.email || "";
+
+
+  loadProfile();
+
+  await loadAttendance();
+
+  renderSubjectsWithCustom();
+
 }
+
+
+/* =========================
+   LOAD ATTENDANCE
+========================= */
 
 async function loadAttendance(){
 
-  const { data, error } = await supabaseClient
-    .from("Attandance")
-    .select("*")
-    .order("date",{ascending:false});
-
-  if(error){
-    console.error(error);
-    alert("Could not load attendance: " + error.message);
+  if(!currentUser){
     return;
   }
 
+
+  const { data, error } =
+    await supabaseClient
+
+      .from("Attandance")
+
+      .select("*")
+
+      .order(
+        "date",
+        {ascending:false}
+      );
+
+
+  if(error){
+
+    console.error(error);
+
+    alert(
+      "Could not load attendance: "
+      + error.message
+    );
+
+    return;
+  }
+
+
   attendance = data || [];
+
   renderSubjects();
+
   renderHistory();
+
   updateOverall();
+
 }
+
+
+/* =========================
+   PROFILE
+========================= */
 
 function saveProfile(){
 
+  if(!currentUser){
+    return;
+  }
+
+
   const profile = {
-    name:document.getElementById("studentName").value,
-    college:document.getElementById("collegeName").value,
-    roll:document.getElementById("rollNumber").value
+
+    name:
+      document.getElementById(
+        "studentName"
+      ).value,
+
+    college:
+      document.getElementById(
+        "collegeName"
+      ).value,
+
+    roll:
+      document.getElementById(
+        "rollNumber"
+      ).value
+
   };
 
+
   localStorage.setItem(
-    "classmate_profile_"+currentUser.id,
+
+    "classmate_profile_"
+    + currentUser.id,
+
     JSON.stringify(profile)
+
   );
 
+
   alert("Profile saved ✅");
+
 }
+
 
 function loadProfile(){
 
-  const saved = localStorage.getItem(
-    "classmate_profile_"+currentUser.id
-  );
+  if(!currentUser){
+    return;
+  }
 
-  if(!saved)return;
 
-  const profile = JSON.parse(saved);
+  const saved =
+    localStorage.getItem(
 
-  document.getElementById("studentName").value =
-    profile.name || "";
+      "classmate_profile_"
+      + currentUser.id
 
-  document.getElementById("collegeName").value =
-    profile.college || "";
+    );
 
-  document.getElementById("rollNumber").value =
-    profile.roll || "";
+
+  if(!saved){
+    return;
+  }
+
+
+  try{
+
+    const profile =
+      JSON.parse(saved);
+
+
+    document.getElementById(
+      "studentName"
+    ).value =
+      profile.name || "";
+
+
+    document.getElementById(
+      "collegeName"
+    ).value =
+      profile.college || "";
+
+
+    document.getElementById(
+      "rollNumber"
+    ).value =
+      profile.roll || "";
+
+  }catch(error){
+
+    console.error(error);
+
+  }
+
 }
+
+
+/* =========================
+   SUBJECTS
+========================= */
 
 function getSubjects(){
 
-  const names = [...new Set(
-    attendance.map(x=>x.subject)
-  )];
+  return [
+    ...new Set(
+      attendance.map(
+        x => x.subject
+      )
+    )
+  ];
 
-  return names;
 }
 
-function renderSubjects(){
-
-  const box = document.getElementById("subjects");
-  box.innerHTML="";
-
-  const subjects = getSubjects();
-
-  if(subjects.length===0){
-    box.innerHTML =
-      '<p class="small">Add your first subject above.</p>';
-    return;
-  }
-
-  subjects.forEach(subject=>{
-
-    const records =
-      attendance.filter(x=>x.subject===subject);
-
-    const total = records.length;
-
-    const present =
-      records.filter(x=>x.status==="present").length;
-
-    const absent =
-      records.filter(x=>x.status==="absent").length;
-
-    const percent =
-      total ? Math.round((present/total)*100) : 0;
-
-    const div=document.createElement("div");
-    div.className="subject";
-
-    div.innerHTML=`
-      <h3>${escapeHTML(subject)}</h3>
-
-      <div class="stats">
-        <div class="stat">
-          <strong>${total}</strong>
-          Total
-        </div>
-
-        <div class="stat">
-          <strong>${present}</strong>
-          Present
-        </div>
-
-        <div class="stat">
-          <strong>${absent}</strong>
-          Absent
-        </div>
-
-        <div class="stat">
-          <strong>${percent}%</strong>
-          Attendance
-        </div>
-      </div>
-
-      <div class="progress">
-        <div style="width:${percent}%"></div>
-      </div>
-
-      <div class="actions" style="margin-top:10px">
-        <button onclick="markAttendance('${escapeJS(subject)}','present')">
-          ✅ Present
-        </button>
-
-        <button onclick="markAttendance('${escapeJS(subject)}','absent')">
-          ❌ Absent
-        </button>
-      </div>
-
-      <button class="danger"
-        onclick="deleteSubject('${escapeJS(subject)}')">
-        Delete Subject
-      </button>
-    `;
-
-    box.appendChild(div);
-  });
-}
-
-async function addSubject(){
-
-  const input=document.getElementById("newSubject");
-  const subject=input.value.trim();
-
-  if(!subject){
-    alert("Enter a subject name.");
-    return;
-  }
-
-  if(getSubjects().includes(subject)){
-    alert("Subject already exists.");
-    return;
-  }
-
-  // Subject appears after first attendance record.
-  // Create today's attendance only when user taps Present/Absent.
-  input.value="";
-
-  const div=document.createElement("div");
-  div.innerHTML="";
-
-  alert(
-    "Subject added! Now tap Present or Absent to record today's class."
-  );
-
-  // Temporary subject marker in local storage
-  let customSubjects =
-    JSON.parse(
-      localStorage.getItem(
-        "classmate_subjects_"+currentUser.id
-      ) || "[]"
-    );
-
-  if(!customSubjects.includes(subject)){
-    customSubjects.push(subject);
-  }
-
-  localStorage.setItem(
-    "classmate_subjects_"+currentUser.id,
-    JSON.stringify(customSubjects)
-  );
-
-  renderSubjectsWithCustom();
-}
 
 function getAllSubjects(){
 
-  const dbSubjects = getSubjects();
+  if(!currentUser){
+    return [];
+  }
+
+
+  const dbSubjects =
+    getSubjects();
+
 
   const customSubjects =
     JSON.parse(
+
       localStorage.getItem(
-        "classmate_subjects_"+currentUser.id
+        "classmate_subjects_"
+        + currentUser.id
       ) || "[]"
+
     );
 
-  return [...new Set([...customSubjects,...dbSubjects])];
+
+  return [
+    ...new Set([
+      ...customSubjects,
+      ...dbSubjects
+    ])
+  ];
+
 }
+
+
+/* =========================
+   RENDER SUBJECTS
+========================= */
+
+function renderSubjects(){
+
+  renderSubjectsWithCustom();
+
+}
+
 
 function renderSubjectsWithCustom(){
 
-  const box=document.getElementById("subjects");
-  box.innerHTML="";
-
-  const subjects=getAllSubjects();
-
-  if(subjects.length===0){
-    box.innerHTML =
-      '<p class="small">Add your first subject above.</p>';
-    return;
-  }
-
-  subjects.forEach(subject=>{
-
-    const records =
-      attendance.filter(x=>x.subject===subject);
-
-    const total=records.length;
-    const present=
-      records.filter(x=>x.status==="present").length;
-    const absent=
-      records.filter(x=>x.status==="absent").length;
-
-    const percent=
-      total ? Math.round((present/total)*100) : 0;
-
-    const div=document.createElement("div");
-    div.className="subject";
-
-    div.innerHTML=`
-      <h3>${escapeHTML(subject)}</h3>
-
-      <div class="stats">
-        <div class="stat"><strong>${total}</strong>Total</div>
-        <div class="stat"><strong>${present}</strong>Present</div>
-        <div class="stat"><strong>${absent}</strong>Absent</div>
-        <div class="stat"><strong>${percent}%</strong>Attendance</div>
-      </div>
-
-      <div class="progress">
-        <div style="width:${percent}%"></div>
-      </div>
-
-      <div class="actions" style="margin-top:10px">
-        <button onclick="markAttendance('${escapeJS(subject)}','present')">
-          ✅ Present
-        </button>
-
-        <button onclick="markAttendance('${escapeJS(subject)}','absent')">
-          ❌ Absent
-        </button>
-      </div>
-
-      <button class="danger"
-        onclick="deleteSubject('${escapeJS(subject)}')">
-        Delete Subject
-      </button>
-    `;
-
-    box.appendChild(div);
-  });
-}
-
-async function markAttendance(subject,status){
-
-  const today =
-    new Date().toISOString().split("T")[0];
-
-  const already =
-    attendance.find(
-      x=>x.subject===subject && x.date===today
+  const box =
+    document.getElementById(
+      "subjects"
     );
 
-  if(already){
 
-    if(already.status===status){
-      alert("Already marked "+status+" today.");
-      return;
-    }
+  box.innerHTML = "";
 
-    const {error}=await supabaseClient
-      .from("Attandance")
-      .update({status:status})
-      .eq("id",already.id)
-      .eq("user_id",currentUser.id);
 
-    if(error){
-      alert(error.message);
-      return;
-    }
+  const subjects =
+    getAllSubjects();
 
-  }else{
 
-    const {error}=await supabaseClient
-      .from("Attandance")
-      .insert({
-        user_id:currentUser.id,
-        subject:subject,
-        date:today,
-        status:status
-      });
+  if(subjects.length === 0){
 
-    if(error){
-      alert(error.message);
-      return;
-    }
-  }
+    box.innerHTML =
+      '<p class="small">' +
+      'Add your first subject above.' +
+      '</p>';
 
-  await loadAttendance();
-  renderSubjectsWithCustom();
-
-  alert(
-    subject+" marked "+status+" for today."
-  );
-}
-
-async function deleteSubject(subject){
-
-  if(!confirm(
-    "Delete all attendance records for "+subject+"?"
-  ))return;
-
-  const {error}=await supabaseClient
-    .from("Attandance")
-    .delete()
-    .eq("subject",subject)
-    .eq("user_id",currentUser.id);
-
-  if(error){
-    alert(error.message);
     return;
   }
+
+
+  subjects.forEach(
+    renderSingleSubject
+  );
+
+}
+
+
+function renderSingleSubject(subject){
+
+  const records =
+    attendance.filter(
+      x => x.subject === subject
+    );
+
+
+  const total =
+    records.length;
+
+
+  const present =
+    records.filter(
+      x => x.status === "present"
+    ).length;
+
+
+  const absent =
+    records.filter(
+      x => x.status === "absent"
+    ).length;
+
+
+  const percent =
+    total
+      ? Math.round(
+          (present / total) * 100
+        )
+      : 0;
+
+
+  const div =
+    document.createElement(
+      "div"
+    );
+
+
+  div.className = "subject";
+
+
+  div.innerHTML = `
+
+    <h3>
+      ${escapeHTML(subject)}
+    </h3>
+
+    <div class="stats">
+
+      <div class="stat">
+        <strong>${total}</strong>
+        Total
+      </div>
+
+      <div class="stat">
+        <strong>${present}</strong>
+        Present
+      </div>
+
+      <div class="stat">
+        <strong>${absent}</strong>
+        Absent
+      </div>
+
+      <div class="stat">
+        <strong>${percent}%</strong>
+        Attendance
+      </div>
+
+    </div>
+
+
+    <div class="progress">
+      <div style="width:${percent}%"></div>
+    </div>
+
+
+    <div
+      class="actions"
+      style="margin-top:10px"
+    >
+
+      <button
+        onclick="markAttendance('${escapeJS(subject)}','present')"
+      >
+        ✅ Present
+      </button>
+
+      <button
+        onclick="markAttendance('${escapeJS(subject)}','absent')"
+      >
+        ❌ Absent
+      </button>
+
+    </div>
+
+
+    <button
+      class="danger"
+      onclick="deleteSubject('${escapeJS(subject)}')"
+    >
+      Delete Subject
+    </button>
+
+  `;
+
+
+  document
+    .getElementById("subjects")
+    .appendChild(div);
+
+}
+
+
+/* =========================
+   ADD SUBJECT
+========================= */
+
+async function addSubject(){
+
+  if(!currentUser){
+
+    alert(
+      "Please sign in first."
+    );
+
+    return;
+  }
+
+
+  const input =
+    document.getElementById(
+      "newSubject"
+    );
+
+
+  const subject =
+    input.value.trim();
+
+
+  if(!subject){
+
+    alert(
+      "Enter a subject name."
+    );
+
+    return;
+  }
+
+
+  if(
+    getAllSubjects().includes(
+      subject
+    )
+  ){
+
+    alert(
+      "Subject already exists."
+    );
+
+    return;
+  }
+
+
+  input.value = "";
+
 
   let customSubjects =
     JSON.parse(
+
       localStorage.getItem(
-        "classmate_subjects_"+currentUser.id
+        "classmate_subjects_"
+        + currentUser.id
       ) || "[]"
+
     );
 
-  customSubjects =
-    customSubjects.filter(x=>x!==subject);
+
+  customSubjects.push(subject);
+
 
   localStorage.setItem(
-    "classmate_subjects_"+currentUser.id,
-    JSON.stringify(customSubjects)
+
+    "classmate_subjects_"
+    + currentUser.id,
+
+    JSON.stringify(
+      customSubjects
+    )
+
   );
 
-  await loadAttendance();
+
   renderSubjectsWithCustom();
+
+
+  alert(
+    "Subject added! Now tap Present " +
+    "or Absent to record today's class."
+  );
+
 }
 
-function renderHistory(){
 
-  const box=document.getElementById("history");
+/* =========================
+   MARK ATTENDANCE
+========================= */
 
-  if(attendance.length===0){
-    box.innerHTML =
-      '<p class="small">No attendance recorded yet.</p>';
+async function markAttendance(
+  subject,
+  status
+){
+
+  if(!currentUser){
+
+    alert(
+      "Please sign in first."
+    );
+
     return;
   }
 
-  box.innerHTML="";
 
-  attendance.forEach(item=>{
+  const today =
+    new Date()
+      .toISOString()
+      .split("T")[0];
 
-    const div=document.createElement("div");
-    div.className="historyItem";
 
-    const cls =
-      item.status==="present"
-      ? "present"
-      : "absent";
+  const already =
+    attendance.find(
 
-    const symbol =
-      item.status==="present"
-      ? "✅"
-      : "❌";
+      x =>
+        x.subject === subject &&
+        x.date === today
 
-    div.innerHTML=`
-      <strong>${escapeHTML(item.subject)}</strong>
-      —
-      ${item.date}
-      —
-      <span class="${cls}">
-        ${symbol} ${item.status}
-      </span>
-    `;
+    );
 
-    box.appendChild(div);
-  });
+
+  if(already){
+
+    if(
+      already.status === status
+    ){
+
+      alert(
+        "Already marked "
+        + status
+        + " today."
+      );
+
+      return;
+    }
+
+
+    const {error} =
+      await supabaseClient
+
+        .from("Attandance")
+
+        .update({
+          status:status
+        })
+
+        .eq(
+          "id",
+          already.id
+        )
+
+        .eq(
+          "user_id",
+          currentUser.id
+        );
+
+
+    if(error){
+
+      alert(error.message);
+
+      return;
+    }
+
+
+  }else{
+
+    const {error} =
+      await supabaseClient
+
+        .from("Attandance")
+
+        .insert({
+
+          user_id:
+            currentUser.id,
+
+          subject:
+            subject,
+
+          date:
+            today,
+
+          status:
+            status
+
+        });
+
+
+    if(error){
+
+      alert(error.message);
+
+      return;
+    }
+
+  }
+
+
+  await loadAttendance();
+
+  renderSubjectsWithCustom();
+
+
+  alert(
+    subject
+    + " marked "
+    + status
+    + " for today."
+  );
+
 }
+
+
+/* =========================
+   DELETE SUBJECT
+========================= */
+
+async function deleteSubject(
+  subject
+){
+
+  if(!currentUser){
+    return;
+  }
+
+
+  if(
+    !confirm(
+      "Delete all attendance records " +
+      "for " + subject + "?"
+    )
+  ){
+    return;
+  }
+
+
+  const {error} =
+    await supabaseClient
+
+      .from("Attandance")
+
+      .delete()
+
+      .eq(
+        "subject",
+        subject
+      )
+
+      .eq(
+        "user_id",
+        currentUser.id
+      );
+
+
+  if(error){
+
+    alert(error.message);
+
+    return;
+  }
+
+
+  let customSubjects =
+    JSON.parse(
+
+      localStorage.getItem(
+        "classmate_subjects_"
+        + currentUser.id
+      ) || "[]"
+
+    );
+
+
+  customSubjects =
+    customSubjects.filter(
+      x => x !== subject
+    );
+
+
+  localStorage.setItem(
+
+    "classmate_subjects_"
+    + currentUser.id,
+
+    JSON.stringify(
+      customSubjects
+    )
+
+  );
+
+
+  await loadAttendance();
+
+  renderSubjectsWithCustom();
+
+}
+
+
+/* =========================
+   HISTORY
+========================= */
+
+function renderHistory(){
+
+  const box =
+    document.getElementById(
+      "history"
+    );
+
+
+  if(attendance.length === 0){
+
+    box.innerHTML =
+      '<p class="small">' +
+      'No attendance recorded yet.' +
+      '</p>';
+
+    return;
+  }
+
+
+  box.innerHTML = "";
+
+
+  attendance.forEach(
+    item => {
+
+      const div =
+        document.createElement(
+          "div"
+        );
+
+
+      div.className =
+        "historyItem";
+
+
+      const cls =
+        item.status === "present"
+          ? "present"
+          : "absent";
+
+
+      const symbol =
+        item.status === "present"
+          ? "✅"
+          : "❌";
+
+
+      div.innerHTML = `
+
+        <strong>
+          ${escapeHTML(item.subject)}
+        </strong>
+
+        —
+        ${escapeHTML(item.date)}
+        —
+
+        <span class="${cls}">
+          ${symbol}
+          ${escapeHTML(item.status)}
+        </span>
+
+      `;
+
+
+      box.appendChild(div);
+
+    }
+  );
+
+}
+
+
+/* =========================
+   OVERALL
+========================= */
 
 function updateOverall(){
 
-  const total=attendance.length;
+  const total =
+    attendance.length;
 
-  const present=
+
+  const present =
     attendance.filter(
-      x=>x.status==="present"
+      x => x.status === "present"
     ).length;
 
-  const percent=
-    total ? Math.round((present/total)*100) : 0;
 
-  document.getElementById("overallPercent")
-    .textContent=percent+"%";
+  const percent =
+    total
+      ? Math.round(
+          (present / total) * 100
+        )
+      : 0;
 
-  document.getElementById("overallBar")
-    .style.width=percent+"%";
+
+  document.getElementById(
+    "overallPercent"
+  ).textContent =
+    percent + "%";
+
+
+  document.getElementById(
+    "overallBar"
+  ).style.width =
+    percent + "%";
+
 }
+
+
+/* =========================
+   SECURITY
+========================= */
 
 function escapeHTML(str){
 
   return String(str)
-    .replaceAll("&","&amp;")
-    .replaceAll("<","&lt;")
-    .replaceAll(">","&gt;")
-    .replaceAll('"',"&quot;")
-    .replaceAll("'","&#039;");
+
+    .replaceAll(
+      "&",
+      "&amp;"
+    )
+
+    .replaceAll(
+      "<",
+      "&lt;"
+    )
+
+    .replaceAll(
+      ">",
+      "&gt;"
+    )
+
+    .replaceAll(
+      '"',
+      "&quot;"
+    )
+
+    .replaceAll(
+      "'",
+      "&#039;"
+    );
+
 }
+
 
 function escapeJS(str){
 
   return String(str)
-    .replaceAll("\\","\\\\")
-    .replaceAll("'","\\'");
+
+    .replaceAll(
+      "\\",
+      "\\\\"
+    )
+
+    .replaceAll(
+      "'",
+      "\\'"
+    );
+
 }
 
+
+/* =========================
+   GOOGLE AUTH SESSION
+========================= */
+
 supabaseClient.auth.onAuthStateChange(
-  async(event,session)=>{
-    if(session){
-      currentUser=session.user;
+  (event, session) => {
 
-      document.getElementById("loginScreen")
-        .style.display="none";
+    console.log(
+      "Auth event:",
+      event
+    );
 
-      document.getElementById("app")
-        .style.display="block";
 
-      document.getElementById("userEmail")
-        .textContent=currentUser.email || "";
+    setTimeout(() => {
 
-      loadProfile();
-      await loadAttendance();
-      renderSubjectsWithCustom();
-    }
+      showApp(session);
+
+    }, 0);
+
   }
 );
 
-checkUser();
 </script>
 
 </body>
